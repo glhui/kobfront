@@ -4,6 +4,7 @@ import { Cell } from "./Cell";
 export class Snake extends GameObject {
     constructor(info, gamemap) {
         super();
+
         this.id = info.id;
         this.color = info.color;
         this.gamemap = gamemap;
@@ -36,7 +37,6 @@ export class Snake extends GameObject {
             [1, 1],
             [1, -1],
         ]
-
     }
 
     start() {
@@ -64,6 +64,10 @@ export class Snake extends GameObject {
         const k = this.cells.length;
         for (let i = k; i > 0; i -- ) {
             this.cells[i] = JSON.parse(JSON.stringify(this.cells[i - 1]));
+        }
+
+        if (!this.gamemap.check_valid(this.next_cell)) {  // 下一步操作撞了，蛇瞬间去世
+            this.status = "die";
         }
     }
 
@@ -104,7 +108,6 @@ export class Snake extends GameObject {
         this.render();
     }
 
-
     render() {
         const L = this.gamemap.L;
         const ctx = this.gamemap.ctx;
@@ -141,7 +144,4 @@ export class Snake extends GameObject {
             ctx.fill();
         }
     }
-
-
-
 }

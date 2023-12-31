@@ -3,24 +3,23 @@ import { Wall } from "./Wall";
 import { Snake } from "./Snake";
 
 export class GameMap extends GameObject {
-    constructor(ctx, parent, store) {
+    constructor(ctx, parent) {
         super();
 
         this.ctx = ctx;
         this.parent = parent;
-        this.store = store;
-        this.L = 0; // 单位长度
+        this.L = 0;
+
         this.rows = 13;
         this.cols = 14;
-
-        this.inner_wallers_count = 20;
+        
+        this.inner_walls_count = 20;
         this.walls = [];
 
         this.snakes = [
             new Snake({id: 0, color: "#4876EC", r: this.rows - 2, c: 1}, this),
             new Snake({id: 1, color: "#F94848", r: 1, c: this.cols - 2}, this),
         ];
-
     }
 
     check_connectivity(g, sx, sy, tx, ty) {
@@ -28,11 +27,12 @@ export class GameMap extends GameObject {
         g[sx][sy] = true;
 
         let dx = [-1, 0, 1, 0], dy = [0, 1, 0, -1];
-        for (let i = 0; i < 4; i++) {
+        for (let i = 0; i < 4; i ++ ) {
             let x = sx + dx[i], y = sy + dy[i];
             if (!g[x][y] && this.check_connectivity(g, x, y, tx, ty))
                 return true;
         }
+
         return false;
     }
 
@@ -45,45 +45,42 @@ export class GameMap extends GameObject {
             }
         }
 
-        //给四周加上障碍物
-        for (let r = 0; r < this.rows; r++) {
+        // 给四周加上障碍物
+        for (let r = 0; r < this.rows; r ++ ) {
             g[r][0] = g[r][this.cols - 1] = true;
         }
 
-        for (let c = 0; c < this.cols; c++) {
+        for (let c = 0; c < this.cols; c ++ ) {
             g[0][c] = g[this.rows - 1][c] = true;
         }
 
-        //创建随机障碍物
-        console.log(this.inner_wallers_count / 2);
-        let i = this.inner_wallers_count / 2;
-        while (i > 0) {
-            for (let j = 0; j < 1000; j++) {
+        // 创建随机障碍物
+        for (let i = 0; i < this.inner_walls_count / 2; i ++ ) {
+            for (let j = 0; j < 1000; j ++ ) {
                 let r = parseInt(Math.random() * this.rows);
                 let c = parseInt(Math.random() * this.cols);
-                if (g[r][c] || g[c][r]) continue;
-                if (this.rows-2 == 0 && c == 1 || this.cols-2 == 0 && r == 1) continue;
-                g[r][c] = g[c][r] = true;
-                console.log("inner wall count: " + i);
+                if (g[r][c] || g[this.rows - 1 - r][this.cols - 1 - c]) continue;
+                if (r == this.rows - 2 && c == 1 || r == 1 && c == this.cols - 2)
+                    continue;
+
+                g[r][c] = g[this.rows - 1 - r][this.cols - 1 - c] = true;
                 break;
             }
-            i--;
         }
 
         const copy_g = JSON.parse(JSON.stringify(g));
-        if (!this.check_connectivity(copy_g, this.rows - 2, 1, 1, this.cols - 2)) return false;
+        if (!this.check_connectivity(copy_g, this.rows - 2, 1, 1, this.cols - 2))
+            return false;
 
-        for (let r = 0; r < this.rows; r++) {
-            for (let c = 0; c < this.cols; c++) {
+        for (let r = 0; r < this.rows; r ++ ) {
+            for (let c = 0; c < this.cols; c ++ ) {
                 if (g[r][c]) {
                     this.walls.push(new Wall(r, c, this));
                 }
             }
         }
-        console.log("wall count: " + this.walls.length);
+
         return true;
-
-
     }
 
     add_listening_events() {
@@ -102,12 +99,11 @@ export class GameMap extends GameObject {
         });
     }
 
-
     start() {
-        for (let i = 0; i < 1000; i++)
+        for (let i = 0; i < 1000; i ++ ) 
             if (this.create_walls())
                 break;
-
+        
         this.add_listening_events();
     }
 
@@ -115,15 +111,16 @@ export class GameMap extends GameObject {
         this.L = parseInt(Math.min(this.parent.clientWidth / this.cols, this.parent.clientHeight / this.rows));
         this.ctx.canvas.width = this.L * this.cols;
         this.ctx.canvas.height = this.L * this.rows;
-
     }
-    check_ready() {
+
+    check_ready() {  // 判断两条蛇是否都准备好下一回合了
         for (const snake of this.snakes) {
             if (snake.status !== "idle") return false;
             if (snake.direction === -1) return false;
-
         }
+        return true;
     }
+
     next_step() {  // 让两条蛇进入下一回合
         for (const snake of this.snakes) {
             snake.next_step();
@@ -171,5 +168,6 @@ export class GameMap extends GameObject {
             }
         }
     }
+
 
 }
